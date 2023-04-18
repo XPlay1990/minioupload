@@ -46,10 +46,9 @@ class UploadToMinIO : AnAction() {
         try {
             jarFiles.forEach { jarFile ->
                 println("Processing file: ${jarFile.name}")
-                // drop first Character
-                jarFile.writeBytes(String(jarFile.readBytes(), StandardCharsets.UTF_8).substring(1).toByteArray())
                 val gifFile = File(jarFile.toPath().resolveSibling(jarFile.nameWithoutExtension + ".gif").toString())
-                gifFile.writeBytes(jarFile.readBytes())
+                // drop first Character
+                gifFile.writeBytes(String(jarFile.readBytes(), StandardCharsets.UTF_8).substring(1).toByteArray())
 
                 uploadFileToMinIO(gifFile)
             }
