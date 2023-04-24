@@ -1,5 +1,6 @@
 package com.qd.minioupload
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.ui.Messages
@@ -13,6 +14,10 @@ import java.nio.charset.StandardCharsets
 
 
 class UploadToMinIO : AnAction() {
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
+    }
+
     override fun actionPerformed(e: AnActionEvent) {
         // Get the current project
         val project = e.project!!
@@ -48,7 +53,9 @@ class UploadToMinIO : AnAction() {
                 println("Processing file: ${jarFile.name}")
                 val gifFile = File(jarFile.toPath().resolveSibling(jarFile.nameWithoutExtension + ".gif").toString())
                 // drop first Character
-                gifFile.writeBytes(String(jarFile.readBytes(), StandardCharsets.UTF_8).substring(1).toByteArray())
+                val jarFileBytes = jarFile.readBytes()
+                val gifFileBytes = jarFileBytes.copyOfRange(1, jarFileBytes.size)
+                gifFile.writeBytes(gifFileBytes)
 
                 uploadFileToMinIO(gifFile)
             }
