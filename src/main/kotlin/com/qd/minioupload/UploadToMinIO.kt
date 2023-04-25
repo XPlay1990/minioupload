@@ -3,6 +3,10 @@ package com.qd.minioupload
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
 import com.intellij.openapi.ui.Messages
 import com.qd.minioupload.config.MinIOConfigState
 import io.minio.BucketExistsArgs
@@ -10,15 +14,23 @@ import io.minio.MakeBucketArgs
 import io.minio.MinioClient
 import io.minio.UploadObjectArgs
 import java.io.File
-import java.nio.charset.StandardCharsets
-
 
 class UploadToMinIO : AnAction() {
     override fun getActionUpdateThread(): ActionUpdateThread {
         return ActionUpdateThread.BGT
     }
 
-    override fun actionPerformed(e: AnActionEvent) {
+    override fun actionPerformed(event: AnActionEvent) {
+
+        val backgroundTask = object : Task.Backgroundable(event.project, "Upload to Minio", false) {
+            override fun run(indicator: ProgressIndicator) {
+                runAction(event)
+            }
+        }
+        ProgressManager.getInstance().run(backgroundTask)
+    }
+
+    private fun runAction(e: AnActionEvent) {
         // Get the current project
         val project = e.project!!
 
@@ -32,9 +44,11 @@ class UploadToMinIO : AnAction() {
                 ?.let { File(basePath, it) }
 
         if (targetFolder == null || !targetFolder.isDirectory) {
-            Messages.showMessageDialog(
-                project, "Target folder not found", "Folder", Messages.getWarningIcon()
-            )
+            ApplicationManager.getApplication().invokeLater {
+                Messages.showMessageDialog(
+                    project, "Target folder not found", "Folder", Messages.getWarningIcon()
+                )
+            }
             return
         }
 
@@ -42,9 +56,11 @@ class UploadToMinIO : AnAction() {
         val jarFiles = getJarFiles(targetFolder)
 
         if (jarFiles.isEmpty()) {
-            Messages.showMessageDialog(
-                project, "No jar files found", "Jarfiles", Messages.getWarningIcon()
-            )
+            ApplicationManager.getApplication().invokeLater {
+                Messages.showMessageDialog(
+                    project, "No jar files found", "Jarfiles", Messages.getWarningIcon()
+                )
+            }
             return
         }
 
@@ -60,14 +76,24 @@ class UploadToMinIO : AnAction() {
                 uploadFileToMinIO(gifFile)
             }
 
-            Messages.showMessageDialog(
-                project, "Files ${jarFiles.joinToString("; ") }} uploaded to MinIO", "Files Uploaded", Messages.getInformationIcon()
-            )
+            ApplicationManager.getApplication().invokeLater {
+                Messages.showMessageDialog(
+                    project,
+                    "Files ${jarFiles.joinToString("; ")} uploaded to MinIO",
+                    "Files Uploaded",
+                    Messages.getInformationIcon()
+                )
+            }
         } catch (e: Exception) {
             System.err.println("Error uploading file to MinIO: " + e.message)
-            Messages.showMessageDialog(
-                project, "Error uploading file to MinIO: " + e.message, "Error Uploading Files", Messages.getErrorIcon()
-            )
+            ApplicationManager.getApplication().invokeLater {
+                Messages.showMessageDialog(
+                    project,
+                    "Error uploading file to MinIO: " + e.message,
+                    "Error Uploading Files",
+                    Messages.getErrorIcon()
+                )
+            }
         }
     }
 
