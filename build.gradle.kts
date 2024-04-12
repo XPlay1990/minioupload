@@ -2,13 +2,13 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "1.9.20"
-    id("org.jetbrains.intellij") version "1.13.3"
+    id("org.jetbrains.kotlin.jvm") version "1.9.23"
+    id("org.jetbrains.intellij") version "1.15.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "com.qd"
-version = "1.1"
+version = "1.2"
 
 repositories {
     mavenCentral()
@@ -24,7 +24,7 @@ intellij {
 }
 
 dependencies {
-    implementation("io.minio:minio:8.5.7")
+    implementation("io.minio:minio:8.5.9")
 }
 
 tasks {
@@ -43,7 +43,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("222")
-        untilBuild.set("233.*")
+        untilBuild.set("250.*")
     }
 
     signPlugin {
